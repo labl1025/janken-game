@@ -12,10 +12,10 @@ body{display:flex;justify-content:center;align-items:center;overflow:hidden}
 .app{width:min(100vw,430px);height:100dvh;min-height:620px;background:#ffc20a;position:relative;overflow:hidden;display:flex;flex-direction:column}
 .close{position:absolute;right:18px;top:14px;color:#fff;font-size:34px;font-weight:200;line-height:1;background:none;border:0;z-index:5}
 .title{height:105px;display:flex;justify-content:center;align-items:flex-end;padding-bottom:6px;color:#fff;font-size:34px;font-weight:900;letter-spacing:.06em;text-shadow:0 2px 0 rgba(0,0,0,.04)}
-.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 18px 12px}
-.speech{height:64px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:900;letter-spacing:.08em;transform:rotate(-3deg);text-shadow:0 2px 0 rgba(0,0,0,.05)}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10px 12px;min-width:0}
+.speech{height:64px;width:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:clamp(20px,6.5vw,28px);font-weight:900;letter-spacing:.04em;transform:rotate(-3deg);text-shadow:0 2px 0 rgba(0,0,0,.05);white-space:nowrap}
 .character{width:205px;height:235px;display:flex;align-items:flex-end;justify-content:center;margin:2px 0 16px}
-.penguin{width:185px;height:225px}
+.penguin{width:170px;height:188px;object-fit:contain}
 .result{min-height:55px;color:#fff;font-size:27px;font-weight:900;text-align:center;line-height:1.25;white-space:pre-line;text-shadow:0 2px 0 rgba(0,0,0,.05)}
 .hands{display:flex;gap:22px;margin-top:8px}
 .hand{width:82px;height:82px;border:0;border-radius:50%;background:#7441c7;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(65,24,123,.25);cursor:pointer;transition:transform .08s,filter .15s}
@@ -40,21 +40,7 @@ body{display:flex;justify-content:center;align-items:center;overflow:hidden}
     <div class="speech" id="speech">じゃーん　けーん</div>
 
     <div class="character" id="character">
-      <svg class="penguin" viewBox="0 0 220 260" aria-label="ペンギンのキャラクター">
-        <ellipse cx="110" cy="246" rx="63" ry="10" fill="#a77b00"/>
-        <path d="M50 72 C43 42 68 13 110 13 C152 13 177 42 170 72 L158 183 C154 224 136 241 110 241 C84 241 66 224 62 183Z" fill="#111"/>
-        <ellipse cx="110" cy="119" rx="64" ry="73" fill="#fff"/>
-        <ellipse cx="110" cy="190" rx="54" ry="51" fill="#999"/>
-        <ellipse cx="86" cy="84" rx="10" ry="16" fill="#111"/>
-        <ellipse cx="134" cy="84" rx="10" ry="16" fill="#111"/>
-        <ellipse cx="86" cy="86" rx="4" ry="7" fill="#fff"/>
-        <ellipse cx="134" cy="86" rx="4" ry="7" fill="#fff"/>
-        <path d="M96 103 Q110 94 124 103 Q121 116 110 117 Q99 116 96 103Z" fill="#f39a1e" stroke="#222" stroke-width="3"/>
-        <path d="M66 157 Q39 175 48 202 Q57 212 68 199 L78 174Z" fill="#999" stroke="#222" stroke-width="3"/>
-        <path d="M154 157 Q181 175 172 202 Q163 212 152 199 L142 174Z" fill="#999" stroke="#222" stroke-width="3"/>
-        <path d="M81 236 Q72 248 78 252 Q91 255 103 248" fill="#222"/>
-        <path d="M139 236 Q148 248 142 252 Q129 255 117 248" fill="#222"/>
-      </svg>
+      <img class="penguin" src="https://static.wixstatic.com/media/a9144a_d046d7527d09486ab936bcd420d0deb7~mv2.png/v1/fill/w_118%2Ch_130%2Cal_c%2Cq_85%2Cusm_0.66_1.00_0.01%2Cenc_avif%2Cquality_auto/%E3%83%88%E3%83%AA%E4%B8%B8%E3%81%8F%E3%82%93%403x.png" alt="トリ丸">
     </div>
 
     <div class="result" id="result">どれを出す？</div>
@@ -74,6 +60,10 @@ body{display:flex;justify-content:center;align-items:center;overflow:hidden}
 <script>
 const hands={rock:"✊",scissors:"✌️",paper:"🖐️"};
 const names={rock:"グー",scissors:"チョキ",paper:"パー"};
+const torimaruImage = "https://static.wixstatic.com/media/a9144a_d046d7527d09486ab936bcd420d0deb7~mv2.png/v1/fill/w_118%2Ch_130%2Cal_c%2Cq_85%2Cusm_0.66_1.00_0.01%2Cenc_avif%2Cquality_auto/%E3%83%88%E3%83%AA%E4%B8%B8%E3%81%8F%E3%82%93%403x.png";
+function showTorimaru(){
+  document.getElementById("character").innerHTML = `<img class="penguin" src="${torimaruImage}" alt="トリ丸">`;
+}
 let sound=true, busy=false;
 
 function cpuChoice(){return ["rock","scissors","paper"][Math.floor(Math.random()*3)]}
@@ -94,6 +84,7 @@ function play(player){
   busy=true;
   document.querySelectorAll(".hand").forEach(b=>b.disabled=true);
   const character=document.getElementById("character"), speech=document.getElementById("speech"), result=document.getElementById("result");
+  showTorimaru();
   speech.textContent="じゃーん　けーん";
   result.textContent="";
   character.classList.remove("bounce"); void character.offsetWidth; character.classList.add("bounce");
@@ -118,18 +109,7 @@ function resetGame(){
   busy=false;
   document.getElementById("speech").textContent="じゃーん　けーん";
   document.getElementById("result").textContent="どれを出す？";
-  document.getElementById("character").innerHTML=`<svg class="penguin" viewBox="0 0 220 260" aria-label="ペンギンのキャラクター">
-    <ellipse cx="110" cy="246" rx="63" ry="10" fill="#a77b00"/>
-    <path d="M50 72 C43 42 68 13 110 13 C152 13 177 42 170 72 L158 183 C154 224 136 241 110 241 C84 241 66 224 62 183Z" fill="#111"/>
-    <ellipse cx="110" cy="119" rx="64" ry="73" fill="#fff"/>
-    <ellipse cx="110" cy="190" rx="54" ry="51" fill="#999"/>
-    <ellipse cx="86" cy="84" rx="10" ry="16" fill="#111"/><ellipse cx="134" cy="84" rx="10" ry="16" fill="#111"/>
-    <ellipse cx="86" cy="86" rx="4" ry="7" fill="#fff"/><ellipse cx="134" cy="86" rx="4" ry="7" fill="#fff"/>
-    <path d="M96 103 Q110 94 124 103 Q121 116 110 117 Q99 116 96 103Z" fill="#f39a1e" stroke="#222" stroke-width="3"/>
-    <path d="M66 157 Q39 175 48 202 Q57 212 68 199 L78 174Z" fill="#999" stroke="#222" stroke-width="3"/>
-    <path d="M154 157 Q181 175 172 202 Q163 212 152 199 L142 174Z" fill="#999" stroke="#222" stroke-width="3"/>
-    <path d="M81 236 Q72 248 78 252 Q91 255 103 248" fill="#222"/><path d="M139 236 Q148 248 142 252 Q129 255 117 248" fill="#222"/>
-  </svg>`;
+  document.getElementById("character").innerHTML=`<img class="penguin" src="${torimaruImage}" alt="トリ丸">`;
   document.querySelectorAll(".hand").forEach(b=>b.disabled=false);
 }
 function toggleSound(){
