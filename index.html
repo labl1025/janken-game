@@ -35,7 +35,6 @@ body{display:flex;justify-content:center;align-items:center;overflow:hidden}
 <body>
 <div class="app">
   <button class="close" aria-label="リセット" onclick="resetGame()">×</button>
-  <div class="score" id="score"></div>
   <div class="title">じゃんけん！</div>
 
   <section class="stage">
@@ -76,7 +75,7 @@ body{display:flex;justify-content:center;align-items:center;overflow:hidden}
 <script>
 const hands={rock:"✊",scissors:"✌️",paper:"🖐️"};
 const names={rock:"グー",scissors:"チョキ",paper:"パー"};
-let score={win:0,lose:0,draw:0}, sound=true, busy=false;
+let sound=true, busy=false;
 
 function cpuChoice(){return ["rock","scissors","paper"][Math.floor(Math.random()*3)]}
 function judge(a,b){
@@ -103,9 +102,9 @@ function play(player){
   setTimeout(()=>{speech.textContent="ぽん！"; beep(780,100)},650);
   setTimeout(()=>{
     const cpu=cpuChoice(), r=judge(player,cpu);
-    if(r==="win"){score.win++;result.textContent="あなたの勝ち！ 🎉"}
-    if(r==="lose"){score.lose++;result.textContent="あなたの負け…"}
-    if(r==="draw"){score.draw++;result.textContent="あいこ！"}
+    if(r==="win"){result.textContent="あなたの勝ち！ 🎉"}
+    if(r==="lose"){result.textContent="あなたの負け…"}
+    if(r==="draw"){result.textContent="あいこ！"}
     speech.textContent=`あなた：${names[player]}　相手：${names[cpu]}`;
     character.innerHTML=`<div style="font-size:145px;line-height:1">${hands[cpu]}</div>`;
     result.classList.remove("flash");void result.offsetWidth;result.classList.add("flash");
@@ -116,11 +115,8 @@ function play(player){
     },450);
   },1000);
 }
-function updateScore(){
-  document.getElementById("score").textContent=`勝ち ${score.win}　負け ${score.lose}　あいこ ${score.draw}`;
-}
 function resetGame(){
-  score={win:0,lose:0,draw:0};busy=false;
+  busy=false;
   document.getElementById("speech").textContent="じゃーん　けーん";
   document.getElementById("result").textContent="どれを出す？";
   document.getElementById("character").innerHTML=`<svg class="penguin" viewBox="0 0 220 260" aria-label="ペンギンのキャラクター">
@@ -136,7 +132,6 @@ function resetGame(){
     <path d="M81 236 Q72 248 78 252 Q91 255 103 248" fill="#222"/><path d="M139 236 Q148 248 142 252 Q129 255 117 248" fill="#222"/>
   </svg>`;
   document.querySelectorAll(".hand").forEach(b=>b.disabled=false);
-  updateScore();
 }
 function toggleSound(){
   sound=!sound;
