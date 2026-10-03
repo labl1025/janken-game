@@ -179,7 +179,7 @@ body{
 
 .speech{
 
-  height:64px;
+  min-height:64px;
 
   width:100%;
 
@@ -280,7 +280,7 @@ body{
 .character.playing .piplup{
 
   animation:
-    bounce .35s ease;
+    bounce .35s ease infinite;
 
 }
 
@@ -329,6 +329,99 @@ body{
 
   animation:
     confused .6s ease;
+
+}
+
+
+/* =========================
+   相手の手表示
+========================= */
+
+.opponent{
+
+  min-height:0;
+
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+
+  justify-content:center;
+
+  margin-top:-4px;
+
+  margin-bottom:5px;
+
+}
+
+
+.opponent-label{
+
+  color:#fff;
+
+  font-size:15px;
+
+  font-weight:800;
+
+  line-height:1.2;
+
+  margin-bottom:3px;
+
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.08);
+
+}
+
+
+.opponent-hand{
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  gap:7px;
+
+  min-width:150px;
+
+  min-height:48px;
+
+  padding:
+    5px
+    14px;
+
+  border-radius:999px;
+
+  background:
+    rgba(255,255,255,.94);
+
+  color:#5b3990;
+
+  box-shadow:
+    0 3px 0 rgba(0,0,0,.12);
+
+  font-size:19px;
+
+  font-weight:900;
+
+}
+
+
+.opponent-hand .emoji{
+
+  font-size:32px;
+
+  line-height:1;
+
+}
+
+
+.opponent-hand.reveal{
+
+  animation:
+    opponentReveal .35s ease;
 
 }
 
@@ -501,10 +594,10 @@ body{
 
   }
 
-  40%{
+  50%{
 
     transform:
-      translateY(-13px);
+      translateY(-12px);
 
   }
 
@@ -681,6 +774,45 @@ body{
 
 
 /* =========================
+   相手の手が出るアニメーション
+========================= */
+
+@keyframes opponentReveal{
+
+  0%{
+
+    transform:
+      scale(.65)
+      translateY(-8px);
+
+    opacity:0;
+
+  }
+
+  60%{
+
+    transform:
+      scale(1.12)
+      translateY(0);
+
+    opacity:1;
+
+  }
+
+  100%{
+
+    transform:
+      scale(1)
+      translateY(0);
+
+    opacity:1;
+
+  }
+
+}
+
+
+/* =========================
    結果テキスト
 ========================= */
 
@@ -731,6 +863,17 @@ body{
       -18px
       0
       -8px;
+
+  }
+
+
+  .opponent{
+
+    transform:scale(.9);
+
+    margin-top:-8px;
+
+    margin-bottom:-2px;
 
   }
 
@@ -827,6 +970,38 @@ body{
         id="piplup"
         src="./piplup-normal.png"
         alt="青いペンギン風キャラクター">
+
+    </div>
+
+
+    <!-- =====================
+         相手の手
+    ====================== -->
+
+    <div
+      class="opponent"
+      id="opponent">
+
+      <div class="opponent-label">
+
+        相手の手
+
+      </div>
+
+
+      <div
+        class="opponent-hand"
+        id="opponentHand">
+
+        <span class="emoji">
+          ❔
+        </span>
+
+        <span id="opponentName">
+          ？？？
+        </span>
+
+      </div>
 
     </div>
 
@@ -982,6 +1157,317 @@ let busy = false;
 
 
 /* =========================
+   AudioContext
+   ※毎回作らず1つを使う
+========================= */
+
+let audioContext = null;
+
+
+function getAudioContext(){
+
+  if(!audioContext){
+
+    const AudioContext =
+      window.AudioContext ||
+      window.webkitAudioContext;
+
+    if(!AudioContext){
+
+      return null;
+
+    }
+
+    audioContext =
+      new AudioContext();
+
+  }
+
+
+  if(
+    audioContext.state ===
+    "suspended"
+  ){
+
+    audioContext.resume();
+
+  }
+
+
+  return audioContext;
+
+}
+
+
+/* =========================
+   1音鳴らす
+========================= */
+
+function playTone(
+  frequency,
+  duration = 100,
+  type = "sine",
+  volume = 0.06,
+  delay = 0
+){
+
+  if(!sound){
+
+    return;
+
+  }
+
+
+  const ctx =
+    getAudioContext();
+
+
+  if(!ctx){
+
+    return;
+
+  }
+
+
+  const start =
+    ctx.currentTime + delay;
+
+
+  const oscillator =
+    ctx.createOscillator();
+
+
+  const gain =
+    ctx.createGain();
+
+
+  oscillator.type =
+    type;
+
+
+  oscillator.frequency.setValueAtTime(
+    frequency,
+    start
+  );
+
+
+  gain.gain.setValueAtTime(
+    0.0001,
+    start
+  );
+
+
+  gain.gain.exponentialRampToValueAtTime(
+    volume,
+    start + 0.015
+  );
+
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.0001,
+    start + duration / 1000
+  );
+
+
+  oscillator.connect(gain);
+
+  gain.connect(
+    ctx.destination
+  );
+
+
+  oscillator.start(start);
+
+  oscillator.stop(
+    start + duration / 1000 + 0.02
+  );
+
+}
+
+
+/* =========================
+   じゃんけん中の音
+========================= */
+
+function playCountSound(){
+
+  /*
+   * ポンポンポン
+   */
+
+  playTone(
+    520,
+    100,
+    "square",
+    0.035,
+    0
+  );
+
+
+  playTone(
+    520,
+    100,
+    "square",
+    0.035,
+    0.25
+  );
+
+
+  playTone(
+    620,
+    140,
+    "square",
+    0.05,
+    0.50
+  );
+
+}
+
+
+/* =========================
+   ポン！の音
+========================= */
+
+function playPonSound(){
+
+  playTone(
+    880,
+    90,
+    "square",
+    0.07,
+    0
+  );
+
+
+  playTone(
+    1175,
+    150,
+    "sine",
+    0.065,
+    0.06
+  );
+
+}
+
+
+/* =========================
+   勝利音
+========================= */
+
+function playWinSound(){
+
+  /*
+   * ド → ミ → ソ → 高いド
+   */
+
+  playTone(
+    523,
+    130,
+    "sine",
+    0.07,
+    0
+  );
+
+
+  playTone(
+    659,
+    130,
+    "sine",
+    0.07,
+    0.12
+  );
+
+
+  playTone(
+    784,
+    130,
+    "sine",
+    0.07,
+    0.24
+  );
+
+
+  playTone(
+    1047,
+    260,
+    "sine",
+    0.08,
+    0.36
+  );
+
+}
+
+
+/* =========================
+   敗北音
+========================= */
+
+function playLoseSound(){
+
+  /*
+   * 下がっていく音
+   */
+
+  playTone(
+    440,
+    180,
+    "sawtooth",
+    0.045,
+    0
+  );
+
+
+  playTone(
+    349,
+    180,
+    "sawtooth",
+    0.045,
+    0.18
+  );
+
+
+  playTone(
+    262,
+    280,
+    "sawtooth",
+    0.05,
+    0.36
+  );
+
+}
+
+
+/* =========================
+   あいこ音
+========================= */
+
+function playDrawSound(){
+
+  /*
+   * ポン、ポン
+   */
+
+  playTone(
+    520,
+    130,
+    "triangle",
+    0.065,
+    0
+  );
+
+
+  playTone(
+    520,
+    130,
+    "triangle",
+    0.065,
+    0.20
+  );
+
+}
+
+
+/* =========================
    CPUの手
 ========================= */
 
@@ -1014,20 +1500,12 @@ function cpuChoice(){
 
 function judge(player,cpu){
 
-  /*
-   * あいこ
-   */
-
   if(player === cpu){
 
     return "draw";
 
   }
 
-
-  /*
-   * 勝ち
-   */
 
   if(
 
@@ -1057,10 +1535,6 @@ function judge(player,cpu){
   }
 
 
-  /*
-   * 負け
-   */
-
   return "lose";
 
 }
@@ -1085,17 +1559,9 @@ function changePiplup(state){
   }
 
 
-  /*
-   * 状態に応じて画像変更
-   */
-
   piplup.src =
     piplupImages[state];
 
-
-  /*
-   * alt変更
-   */
 
   if(state === "normal"){
 
@@ -1129,77 +1595,106 @@ function changePiplup(state){
 
 
 /* =========================
-   効果音
+   相手の手を表示
 ========================= */
 
-function beep(freq,dur=80){
+function showOpponentHand(cpu){
 
-  if(!sound){
+  const opponentHand =
+    document.getElementById(
+      "opponentHand"
+    );
+
+
+  const opponentName =
+    document.getElementById(
+      "opponentName"
+    );
+
+
+  if(!opponentHand){
 
     return;
 
   }
 
 
-  try{
+  /*
+   * 絵文字
+   */
 
-    const AudioContext =
-      window.AudioContext ||
-      window.webkitAudioContext;
-
-
-    const ctx =
-      new AudioContext();
-
-
-    const oscillator =
-      ctx.createOscillator();
+  opponentHand.querySelector(
+    ".emoji"
+  ).textContent =
+    hands[cpu];
 
 
-    const gain =
-      ctx.createGain();
+  /*
+   * グー / チョキ / パー
+   */
+
+  opponentName.textContent =
+    names[cpu];
 
 
-    oscillator.frequency.value =
-      freq;
+  /*
+   * 出現アニメーションを
+   * 毎回リセット
+   */
+
+  opponentHand.classList.remove(
+    "reveal"
+  );
 
 
-    oscillator.type =
-      "sine";
+  void opponentHand.offsetWidth;
 
 
-    gain.gain.value =
-      .035;
+  opponentHand.classList.add(
+    "reveal"
+  );
+
+}
 
 
-    oscillator.connect(gain);
+/* =========================
+   相手の手を隠す
+========================= */
 
+function hideOpponentHand(){
 
-    gain.connect(
-      ctx.destination
+  const opponentHand =
+    document.getElementById(
+      "opponentHand"
     );
 
 
-    oscillator.start();
+  const opponentName =
+    document.getElementById(
+      "opponentName"
+    );
 
 
-    setTimeout(()=>{
+  if(!opponentHand){
 
-      oscillator.stop();
-
-      ctx.close();
-
-    },dur);
-
-  }
-
-  catch(e){
-
-    /*
-     * 音が使えない場合は何もしない
-     */
+    return;
 
   }
+
+
+  opponentHand.classList.remove(
+    "reveal"
+  );
+
+
+  opponentHand.querySelector(
+    ".emoji"
+  ).textContent =
+    "❔";
+
+
+  opponentName.textContent =
+    "？？？";
 
 }
 
@@ -1222,6 +1717,18 @@ function play(player){
 
 
   busy = true;
+
+
+  /*
+   * 音を鳴らすため
+   * 最初のタップでAudioContextを開始
+   */
+
+  if(sound){
+
+    getAudioContext();
+
+  }
 
 
   /*
@@ -1272,7 +1779,7 @@ function play(player){
 
 
   /*
-   * 通常画像に戻す
+   * 通常画像
    */
 
   changePiplup(
@@ -1281,7 +1788,14 @@ function play(player){
 
 
   /*
-   * 通常クラス
+   * 相手の手を隠す
+   */
+
+  hideOpponentHand();
+
+
+  /*
+   * じゃんけん中
    */
 
   character.classList.add(
@@ -1298,7 +1812,7 @@ function play(player){
 
 
   /*
-   * 結果を一旦消す
+   * 結果を消す
    */
 
   result.textContent =
@@ -1306,17 +1820,14 @@ function play(player){
 
 
   /*
-   * じゃんけん音
+   * カウント音
    */
 
-  beep(
-    520,
-    70
-  );
+  playCountSound();
 
 
   /*
-   * 「ぽん！」
+   * ぽん！
    */
 
   setTimeout(()=>{
@@ -1325,10 +1836,7 @@ function play(player){
       "ぽん！";
 
 
-    beep(
-      780,
-      100
-    );
+    playPonSound();
 
   },650);
 
@@ -1360,12 +1868,19 @@ function play(player){
 
 
     /*
-     * じゃんけん中終了
+     * じゃんけん終了
      */
 
     character.classList.remove(
       "playing"
     );
+
+
+    /*
+     * 相手の手を表示
+     */
+
+    showOpponentHand(cpu);
 
 
     /*
@@ -1377,10 +1892,6 @@ function play(player){
       result.textContent =
         "あなたの勝ち！ 🎉";
 
-
-      /*
-       * 勝ち画像
-       */
 
       changePiplup(
         "win"
@@ -1396,10 +1907,7 @@ function play(player){
        * 勝利音
        */
 
-      beep(
-        900,
-        120
-      );
+      playWinSound();
 
     }
 
@@ -1413,10 +1921,6 @@ function play(player){
       result.textContent =
         "あなたの負け…";
 
-
-      /*
-       * 負け画像
-       */
 
       changePiplup(
         "lose"
@@ -1432,10 +1936,7 @@ function play(player){
        * 敗北音
        */
 
-      beep(
-        260,
-        120
-      );
+      playLoseSound();
 
     }
 
@@ -1449,10 +1950,6 @@ function play(player){
       result.textContent =
         "あいこ！";
 
-
-      /*
-       * あいこ画像
-       */
 
       changePiplup(
         "draw"
@@ -1468,10 +1965,7 @@ function play(player){
        * あいこ音
        */
 
-      beep(
-        620,
-        120
-      );
+      playDrawSound();
 
     }
 
@@ -1587,6 +2081,13 @@ function resetGame(){
 
 
   /*
+   * 相手の手をリセット
+   */
+
+  hideOpponentHand();
+
+
+  /*
    * テキスト
    */
 
@@ -1641,6 +2142,18 @@ function toggleSound(){
       ? "🔊 音ON"
 
       : "🔇 音OFF";
+
+
+  /*
+   * ONにした瞬間に
+   * AudioContextを準備
+   */
+
+  if(sound){
+
+    getAudioContext();
+
+  }
 
 }
 
